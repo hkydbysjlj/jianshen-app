@@ -1,0 +1,2633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>健身助手 · 新手跟练可视化系统</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0B0E12;
+            font-family: 'Inter', sans-serif;
+            color: #EFF3F8;
+            padding: 16px 16px 28px;
+            line-height: 1.4;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .view {
+            display: none;
+        }
+        .view.active-view {
+            display: block;
+        }
+
+        /* ========== 登录注册卡片 ========== */
+        .auth-card {
+            max-width: 440px;
+            margin: 60px auto;
+            background: radial-gradient(ellipse at center top, rgba(59, 130, 246, 0.10) 0%, transparent 55%),
+                linear-gradient(160deg, #0C1420 0%, #11161C 28%, #0A0F15 100%);
+            border-radius: 32px;
+            padding: 36px 28px;
+            text-align: center;
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease;
+            box-shadow: 0 0 60px rgba(59, 130, 246, 0.06), 0 20px 60px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            width: 80%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.35), transparent);
+            z-index: 5;
+            pointer-events: none;
+            transition: background 0.6s ease;
+        }
+        .auth-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.28;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Crect x='6' y='18' width='10' height='20' rx='3' fill='none' stroke='%233B82F6' stroke-width='1.2' opacity='0.5'/%3E%3Crect x='16' y='25' width='24' height='6' rx='2' fill='none' stroke='%233B82F6' stroke-width='1.2' opacity='0.5'/%3E%3Crect x='40' y='18' width='10' height='20' rx='3' fill='none' stroke='%233B82F6' stroke-width='1.2' opacity='0.5'/%3E%3C/svg%3E");
+            background-size: 56px 56px;
+            background-repeat: repeat;
+            transition: opacity 0.6s ease, background-image 0.6s ease;
+            animation: subtleBreathe 8s ease-in-out infinite;
+        }
+        @keyframes subtleBreathe {
+            0%,
+            100% {
+                opacity: 0.22;
+            }
+            50% {
+                opacity: 0.34;
+            }
+        }
+        .auth-card.register-mode {
+            background: radial-gradient(ellipse at center top, rgba(245, 158, 11, 0.10) 0%, transparent 55%),
+                linear-gradient(160deg, #1A0F18 0%, #11161C 28%, #0A0F15 100%);
+            border: 1px solid rgba(245, 158, 11, 0.28);
+            box-shadow: 0 0 60px rgba(245, 158, 11, 0.05), 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .auth-card.register-mode::before {
+            background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.35), transparent);
+        }
+        .auth-card.register-mode::after {
+            opacity: 0.26;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Crect x='6' y='18' width='10' height='20' rx='3' fill='none' stroke='%23F59E0B' stroke-width='1.2' opacity='0.5'/%3E%3Crect x='16' y='25' width='24' height='6' rx='2' fill='none' stroke='%23F59E0B' stroke-width='1.2' opacity='0.5'/%3E%3Crect x='40' y='18' width='10' height='20' rx='3' fill='none' stroke='%23F59E0B' stroke-width='1.2' opacity='0.5'/%3E%3C/svg%3E");
+            animation: subtleBreatheGold 7s ease-in-out infinite;
+        }
+        @keyframes subtleBreatheGold {
+            0%,
+            100% {
+                opacity: 0.20;
+            }
+            50% {
+                opacity: 0.33;
+            }
+        }
+        .auth-card h2 {
+            margin-bottom: 24px;
+            font-size: 1.8rem;
+            position: relative;
+            z-index: 2;
+            transition: color 0.5s ease;
+        }
+        .auth-card h2 i {
+            color: #60A5FA;
+            transition: color 0.5s ease;
+        }
+        .auth-card.register-mode h2 i {
+            color: #FBBF24;
+        }
+        .auth-card input {
+            width: 100%;
+            padding: 14px 16px;
+            margin: 12px 0;
+            background: #1F2A37;
+            border: 1px solid #2D3748;
+            border-radius: 28px;
+            color: white;
+            font-size: 1rem;
+            position: relative;
+            z-index: 2;
+            transition: border-color 0.35s ease, box-shadow 0.35s ease, background 0.35s ease;
+            outline: none;
+        }
+        .auth-card input:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+            background: #1A2532;
+        }
+        .auth-card.register-mode input:focus {
+            border-color: #F59E0B;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+            background: #1F1D2A;
+        }
+        .auth-card button {
+            width: 100%;
+            padding: 13px;
+            background: #3B82F6;
+            border: none;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            margin-top: 12px;
+            position: relative;
+            z-index: 2;
+            transition: background 0.35s ease, transform 0.2s ease, box-shadow 0.35s ease;
+        }
+        .auth-card button:hover {
+            background: #2563EB;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+        }
+        .auth-card.register-mode button:not(.switch-btn) {
+            background: #F59E0B;
+            color: #0B0E12;
+        }
+        .auth-card.register-mode button:not(.switch-btn):hover {
+            background: #D97706;
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35);
+        }
+        .auth-card .switch-btn {
+            background: transparent;
+            color: #60A5FA;
+            margin-top: 8px;
+            font-weight: 500;
+            transition: color 0.35s ease;
+        }
+        .auth-card .switch-btn:hover {
+            background: transparent;
+            color: #93C5FD;
+            box-shadow: none;
+            transform: none;
+        }
+        .auth-card.register-mode .switch-btn {
+            color: #FBBF24;
+        }
+        .auth-card.register-mode .switch-btn:hover {
+            color: #FDE68A;
+        }
+        .error-msg {
+            color: #F87171;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            position: relative;
+            z-index: 2;
+        }
+        #loginForm,
+        #registerForm {
+            position: relative;
+            z-index: 2;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        #loginForm.fade-out,
+        #registerForm.fade-out {
+            opacity: 0;
+            transform: translateY(-8px);
+            pointer-events: none;
+        }
+
+        /* ========== 主界面样式 ========== */
+        .header {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .two-columns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 22px;
+        }
+        .main-content {
+            flex: 2;
+            min-width: 260px;
+        }
+        .viz-sidebar {
+            flex: 1.1;
+            min-width: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .muscle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            max-width: 720px;
+            margin: 0 auto 16px;
+        }
+        .muscle-card {
+            background: #11161C;
+            border-radius: 28px;
+            padding: 20px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            border: 1px solid #2A343F;
+            position: relative;
+            overflow: hidden;
+        }
+        .muscle-card .card-badge {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 20px;
+            z-index: 2;
+            pointer-events: none;
+            letter-spacing: 0.5px;
+            transition: all 0.35s ease;
+        }
+        .muscle-card .card-badge.badge-bronze {
+            background: rgba(205, 127, 50, 0.25);
+            color: #CD7F32;
+            border: 1px solid rgba(205, 127, 50, 0.5);
+        }
+        .muscle-card .card-badge.badge-silver {
+            background: rgba(192, 192, 192, 0.2);
+            color: #C0C0C0;
+            border: 1px solid rgba(192, 192, 192, 0.5);
+        }
+        .muscle-card .card-badge.badge-gold {
+            background: rgba(255, 215, 0, 0.2);
+            color: #FFD700;
+            border: 1px solid rgba(255, 215, 0, 0.5);
+            animation: badgeGlow 1.8s ease-in-out infinite;
+        }
+        .muscle-card .card-badge.badge-diamond {
+            background: rgba(185, 242, 255, 0.2);
+            color: #B9F2FF;
+            border: 1px solid rgba(185, 242, 255, 0.55);
+            animation: badgeGlowDiamond 1.4s ease-in-out infinite;
+        }
+        @keyframes badgeGlow {
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 18px rgba(255, 215, 0, 0.6);
+            }
+        }
+        @keyframes badgeGlowDiamond {
+            0%,
+            100% {
+                box-shadow: 0 0 10px rgba(185, 242, 255, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 22px rgba(185, 242, 255, 0.75);
+            }
+        }
+        .muscle-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .muscle-icon img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .muscle-card h3 {
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+        .muscle-card p {
+            font-size: 0.7rem;
+            color: #7F8FA4;
+        }
+        .phase-card {
+            background: #11161C;
+            border-radius: 28px;
+            padding: 16px 14px;
+            margin-bottom: 20px;
+            border: 1px solid #232A33;
+        }
+        .phase-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2D3748;
+        }
+        .exercise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 14px;
+        }
+        .exercise-card {
+            background: #0F141A;
+            border-radius: 22px;
+            padding: 14px;
+            border: 1px solid #262E38;
+            position: relative;
+        }
+        .exercise-card.completed {
+            border-left-width: 4px;
+            background: #121A24;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .exercise-name {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sets-reps {
+            background: #1F2A37;
+            padding: 3px 9px;
+            border-radius: 18px;
+            font-size: 0.68rem;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+            margin: 6px 0;
+        }
+        .demo-btn,
+        .tech-detail-btn {
+            background: #2D3748;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 26px;
+            font-size: 0.68rem;
+            cursor: pointer;
+            color: #CBD5E1;
+        }
+        .tech-detail {
+            background: #0B1015;
+            border-radius: 14px;
+            padding: 6px;
+            margin: 8px 0;
+            font-size: 0.68rem;
+            cursor: pointer;
+        }
+        .rpe-area {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: 0.68rem;
+        }
+        .stars {
+            display: flex;
+            gap: 3px;
+            cursor: pointer;
+        }
+        .stars i {
+            color: #FFB347;
+            font-size: 0.75rem;
+        }
+        .stars i.far {
+            color: #4B5563;
+        }
+        .complete-btn {
+            margin-top: 6px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .check-icon {
+            background: transparent;
+            border: 1.5px solid #3E5A7A;
+            border-radius: 36px;
+            padding: 5px 12px;
+            font-size: 0.68rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #B9D0F0;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .follow-mode-container {
+            background: #0F141A;
+            border-radius: 28px;
+            padding: 18px;
+            text-align: center;
+        }
+        .current-exercise {
+            background: #1A222C;
+            border-radius: 24px;
+            padding: 20px;
+            margin: 14px 0;
+        }
+        .current-exercise h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        .follow-progress {
+            font-size: 0.85rem;
+            color: #9AAEBF;
+            margin-bottom: 10px;
+        }
+        .follow-points {
+            background: #0B1015;
+            padding: 10px;
+            border-radius: 18px;
+            margin: 14px 0;
+            text-align: left;
+            font-size: 0.8rem;
+        }
+        .follow-demo {
+            background: #2D3748;
+            border: none;
+            padding: 7px;
+            border-radius: 36px;
+            width: 100%;
+            margin: 6px 0;
+            cursor: pointer;
+        }
+        .follow-btn {
+            background: #3B82F6;
+            border: none;
+            padding: 12px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 10px;
+            position: relative;
+        }
+        .finish-message {
+            text-align: center;
+            padding: 30px;
+            color: #60A5FA;
+        }
+        .viz-card {
+            background: #11161C;
+            border-radius: 26px;
+            padding: 16px;
+            border: 1px solid #232A33;
+            position: relative;
+        }
+        .viz-card .viz-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #CBD5E1;
+        }
+        .global-progress {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+            background: #0B1015;
+            border-radius: 24px;
+            padding: 10px;
+        }
+        .circle-container {
+            position: relative;
+            width: 68px;
+            height: 68px;
+        }
+        .circular-progress {
+            width: 68px;
+            height: 68px;
+        }
+        .center-percent {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .progress-stats {
+            font-size: 0.65rem;
+        }
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .tool-btn {
+            background: #1F2A37;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 26px;
+            font-size: 0.68rem;
+            cursor: pointer;
+            color: #CBD5E1;
+        }
+        .tool-btn.danger {
+            color: #F87171;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #11161C;
+            border-radius: 28px;
+            padding: 22px;
+            max-width: 90%;
+            width: 600px;
+            text-align: center;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .demo-animation {
+            background: #1A222C;
+            border-radius: 22px;
+            padding: 18px;
+            margin: 14px 0;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .stickman {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            margin: 0 auto;
+        }
+        .stickman .body {
+            position: absolute;
+            width: 4px;
+            height: 50px;
+            background: #60A5FA;
+            left: 58px;
+            top: 30px;
+            transform-origin: top center;
+        }
+        .stickman .arm {
+            position: absolute;
+            width: 30px;
+            height: 4px;
+            background: #60A5FA;
+            top: 45px;
+            left: 45px;
+            transform-origin: left center;
+        }
+        .stickman .arm-right {
+            left: 75px;
+            transform-origin: right center;
+        }
+        .animate-pull .body {
+            animation: bodyMove 1s infinite alternate;
+        }
+        .animate-pull .arm {
+            animation: armPull 1s infinite alternate;
+        }
+        .animate-pull .arm-right {
+            animation: armPullRight 1s infinite alternate;
+        }
+        @keyframes bodyMove {
+            0% {
+                transform: translateY(0px);
+            }
+            100% {
+                transform: translateY(15px);
+            }
+        }
+        @keyframes armPull {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(-30deg);
+            }
+        }
+        @keyframes armPullRight {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(30deg);
+            }
+        }
+        .demo-placeholder {
+            font-size: 0.75rem;
+            color: #7F8FA4;
+            margin-top: 10px;
+        }
+        .close-modal {
+            background: #3B82F6;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 26px;
+            color: white;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .placeholder-chart {
+            text-align: center;
+            padding: 28px 14px;
+            color: #7F8FA4;
+            font-size: 0.75rem;
+        }
+        .week-plan {
+            background: #0B1015;
+            border-radius: 22px;
+            padding: 10px;
+            margin-bottom: 0;
+        }
+        .plan-day {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 8px;
+            border-bottom: 1px solid #2D3748;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 8px;
+        }
+        .plan-day:hover {
+            background: #1A2532;
+        }
+        .plan-day:last-child {
+            border: none;
+        }
+        .plan-day .day {
+            font-weight: 600;
+            width: 70px;
+            pointer-events: none;
+        }
+        .plan-edit-btn {
+            background: #2D3748;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 26px;
+            font-size: 0.68rem;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .viz-row {
+            display: flex;
+            gap: 14px;
+        }
+        .viz-row .viz-card {
+            flex: 1;
+            min-width: 0;
+            padding: 14px;
+        }
+        .viz-row .viz-card .viz-title {
+            font-size: 0.78rem;
+            margin-bottom: 8px;
+        }
+        .viz-row #chartContainer {
+            min-height: 120px;
+        }
+        .viz-row #chartContainer .placeholder-chart {
+            padding: 20px 8px;
+            font-size: 0.7rem;
+        }
+        .viz-row #dynamicMuscleChart {
+            max-width: 100%;
+            height: auto;
+            max-height: 150px;
+        }
+        .viz-row #recentSummary {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.68rem;
+        }
+        .viz-row #dynamicTips {
+            font-size: 0.65rem;
+            padding-left: 16px;
+            margin-top: 4px;
+        }
+        .viz-row #dynamicTips li {
+            margin-bottom: 3px;
+        }
+
+        /* ========== 游戏化宝石收集系统 ========== */
+        .gem-collection-panel {
+            text-align: center;
+            padding: 6px 0;
+        }
+        .level-badge-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 14px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+        .level-badge.badge-lv-bronze {
+            background: linear-gradient(135deg, #3D2B1F, #5C3A1E);
+            color: #E8A860;
+            border: 1px solid rgba(205, 127, 50, 0.6);
+            box-shadow: 0 0 14px rgba(205, 127, 50, 0.2);
+        }
+        .level-badge.badge-lv-silver {
+            background: linear-gradient(135deg, #2A2F35, #3D4248);
+            color: #D0D5DD;
+            border: 1px solid rgba(192, 192, 192, 0.6);
+            box-shadow: 0 0 16px rgba(192, 192, 192, 0.25);
+        }
+        .level-badge.badge-lv-gold {
+            background: linear-gradient(135deg, #3D3520, #5C4A1E);
+            color: #FFD700;
+            border: 1px solid rgba(255, 215, 0, 0.65);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            animation: badgeGlowGold 1.8s ease-in-out infinite;
+        }
+        .level-badge.badge-lv-diamond {
+            background: linear-gradient(135deg, #1A2D35, #1E3A42);
+            color: #B9F2FF;
+            border: 1px solid rgba(185, 242, 255, 0.65);
+            box-shadow: 0 0 22px rgba(185, 242, 255, 0.4);
+            animation: badgeGlowDiamondLv 1.4s ease-in-out infinite;
+        }
+        .level-badge.badge-lv-legendary {
+            background: linear-gradient(135deg, #2D1A3D, #4A1E5C);
+            color: #E8BFFF;
+            border: 1px solid rgba(200, 160, 255, 0.7);
+            box-shadow: 0 0 26px rgba(180, 130, 255, 0.5);
+            animation: badgeGlowLegendary 1s ease-in-out infinite;
+        }
+        @keyframes badgeGlowGold {
+            0%,
+            100% {
+                box-shadow: 0 0 16px rgba(255, 215, 0, 0.25);
+            }
+            50% {
+                box-shadow: 0 0 28px rgba(255, 215, 0, 0.55);
+            }
+        }
+        @keyframes badgeGlowDiamondLv {
+            0%,
+            100% {
+                box-shadow: 0 0 18px rgba(185, 242, 255, 0.35);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(185, 242, 255, 0.7);
+            }
+        }
+        @keyframes badgeGlowLegendary {
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(200, 160, 255, 0.45);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 36px rgba(200, 160, 255, 0.8);
+                transform: scale(1.04);
+            }
+        }
+        .level-badge .badge-icon {
+            font-size: 1.2rem;
+        }
+        .gem-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .gem-slot {
+            width: 44px;
+            height: 50px;
+            position: relative;
+            cursor: default;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .gem-slot.just-filled {
+            animation: gemPopIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes gemPopIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            60% {
+                transform: scale(1.25);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        .gem-slot .gem-shape {
+            width: 36px;
+            height: 38px;
+            margin: 0 auto;
+            border-radius: 40% 40% 50% 50% / 35% 35% 55% 55%;
+            background: #2D3748;
+            border: 2px solid #3E4A5A;
+            transition: all 0.5s ease;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .gem-slot .gem-shape.gem-filled-partial {
+            background: linear-gradient(180deg, #D97706 0%, #B45309 40%, #92400E 100%);
+            border-color: #F59E0B;
+            box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.2), 0 0 10px rgba(245, 158, 11, 0.35);
+        }
+        .gem-slot .gem-shape.gem-filled-full {
+            background: linear-gradient(180deg, #FFD700 0%, #F59E0B 30%, #D97706 70%, #B45309 100%);
+            border-color: #FFD700;
+            box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.4), 0 0 18px rgba(255, 215, 0, 0.55), 0 0 30px rgba(245, 158, 11, 0.3);
+            animation: gemGlowFull 2s ease-in-out infinite;
+        }
+        @keyframes gemGlowFull {
+            0%,
+            100% {
+                box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.4), 0 0 14px rgba(255, 215, 0, 0.45), 0 0 24px rgba(245, 158, 11, 0.25);
+            }
+            50% {
+                box-shadow: inset 0 2px 8px rgba(255, 255, 255, 0.6), 0 0 24px rgba(255, 215, 0, 0.7), 0 0 38px rgba(245, 158, 11, 0.45);
+            }
+        }
+        .gem-slot .gem-sparkle {
+            position: absolute;
+            top: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .gem-slot .gem-shape.gem-filled-full+.gem-sparkle {
+            opacity: 0.9;
+            animation: sparkleTwinkle 1.2s ease-in-out infinite;
+        }
+        @keyframes sparkleTwinkle {
+            0%,
+            100% {
+                opacity: 0.5;
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translateX(-50%) scale(1.8);
+            }
+        }
+        .gem-label-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 0.58rem;
+            color: #7F8FA4;
+            margin-bottom: 8px;
+        }
+        .gem-label-row span {
+            width: 44px;
+            text-align: center;
+            transition: color 0.4s ease;
+        }
+        .gem-label-row span.label-active {
+            color: #FBBF24;
+            font-weight: 600;
+        }
+        .xp-bar-container {
+            margin-top: 6px;
+            background: #1F2A37;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        .xp-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #F59E0B, #FBBF24, #FFD700);
+            transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+        }
+        .xp-bar-fill::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 16px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35));
+            border-radius: 0 10px 10px 0;
+        }
+        .xp-label {
+            font-size: 0.58rem;
+            color: #7F8FA4;
+            text-align: center;
+            margin-top: 3px;
+        }
+
+        /* ========== 浮动奖励动画 ========== */
+        .float-reward {
+            position: fixed;
+            pointer-events: none;
+            z-index: 2000;
+            font-weight: 800;
+            font-size: 1rem;
+            animation: floatUp 1.5s ease-out forwards;
+            white-space: nowrap;
+            text-shadow: 0 0 12px currentColor;
+        }
+        .float-reward.critical {
+            font-size: 1.3rem;
+            animation: floatUpCrit 1.8s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(0.5);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-20px) scale(1.15);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-70px) scale(0.8);
+            }
+        }
+        @keyframes floatUpCrit {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(0.3) rotate(-5deg);
+            }
+            25% {
+                opacity: 1;
+                transform: translateY(-25px) scale(1.35) rotate(3deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-90px) scale(0.7) rotate(0deg);
+            }
+        }
+
+        /* ========== 粒子爆发 ========== */
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1999;
+            border-radius: 50%;
+            animation: particleBurst 0.9s ease-out forwards;
+        }
+        @keyframes particleBurst {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--px), var(--py)) scale(0);
+            }
+        }
+
+        /* ========== 成就Toast ========== */
+        .achievement-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 3000;
+            background: linear-gradient(135deg, #1A222C, #0F141A);
+            border: 1px solid #F59E0B;
+            border-radius: 16px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(245, 158, 11, 0.3);
+            animation: toastSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), toastFadeOut 0.5s ease 2.5s forwards;
+            max-width: 340px;
+        }
+        .achievement-toast .toast-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        .achievement-toast .toast-text .toast-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #FBBF24;
+        }
+        .achievement-toast .toast-text .toast-desc {
+            font-size: 0.68rem;
+            color: #CBD5E1;
+        }
+        @keyframes toastSlideIn {
+            0% {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes toastFadeOut {
+            0% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(60px);
+            }
+        }
+
+        .shop-sidebar-card {
+            cursor: pointer;
+            transition: all 0.25s ease;
+            border: 1px solid rgba(59, 130, 246, 0.22);
+            background: linear-gradient(135deg, #11161C 0%, #16202D 100%);
+            padding: 14px 16px;
+        }
+        .shop-sidebar-card:hover {
+            border-color: #3B82F6;
+            background: linear-gradient(135deg, #16202D 0%, #1A2532 100%);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.12);
+            transform: translateY(-2px);
+        }
+        .shop-sidebar-card .shop-sidebar-inner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .shop-sidebar-card .shop-sidebar-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .shop-sidebar-card .shop-sidebar-icon i {
+            font-size: 1.2rem;
+        }
+        .shop-sidebar-card .shop-sidebar-text {
+            flex: 1;
+            min-width: 0;
+        }
+        .shop-sidebar-card .shop-sidebar-text .shop-sidebar-title {
+            font-weight: 600;
+            font-size: 0.82rem;
+            color: #EFF3F8;
+            margin-bottom: 2px;
+        }
+        .shop-sidebar-card .shop-sidebar-text .shop-sidebar-desc {
+            font-size: 0.65rem;
+            color: #7F8FA4;
+        }
+        .shop-sidebar-card .shop-sidebar-arrow {
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            transition: transform 0.25s ease;
+        }
+        .shop-sidebar-card:hover .shop-sidebar-arrow {
+            transform: translateX(3px);
+        }
+
+        .shop-search {
+            width: 100%;
+            padding: 11px 14px;
+            background: #1F2A37;
+            border: 1px solid #2D3748;
+            border-radius: 36px;
+            color: white;
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+        }
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+        }
+        .shop-item {
+            background: #0F141A;
+            border-radius: 22px;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid #262E38;
+        }
+        .shop-item:hover {
+            background: #18202A;
+            border-color: #3B82F6;
+        }
+        .shop-item i {
+            font-size: 1.8rem;
+            color: #60A5FA;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .shop-item h4 {
+            font-size: 0.9rem;
+            margin-bottom: 3px;
+        }
+        .shop-item p {
+            font-size: 0.65rem;
+            color: #9AAEBF;
+        }
+        .no-result {
+            text-align: center;
+            padding: 30px;
+            color: #7F8FA4;
+        }
+
+        /* ========== 主界面金色点缀 ========== */
+        #mainView .header h1 {
+            background: linear-gradient(135deg, #FFFFFF 0%, #FDE68A 30%, #B9E6FF 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        #mainView .header .sub {
+            border-left-color: #FBBF24;
+        }
+        #mainView .viz-card .viz-title i {
+            color: #FBBF24;
+        }
+        #mainView .plan-day .part {
+            color: #FBBF24;
+            font-weight: 500;
+        }
+        #mainView .center-percent {
+            color: #FBBF24;
+        }
+        #mainView .muscle-card:hover {
+            border-color: #F59E0B;
+            box-shadow: 0 0 18px rgba(245, 158, 11, 0.15);
+        }
+        #mainView .exercise-card.completed {
+            border-left-color: #F59E0B;
+        }
+        #mainView .check-icon.active {
+            background: #F59E0B;
+            border-color: #F59E0B;
+            color: #0B0E12;
+        }
+        #mainView .shop-sidebar-card {
+            border-color: rgba(245, 158, 11, 0.28);
+            background: linear-gradient(135deg, #11161C 0%, #1E1822 100%);
+        }
+        #mainView .shop-sidebar-card:hover {
+            border-color: #F59E0B;
+            background: linear-gradient(135deg, #1E1822 0%, #2A1F2A 100%);
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.15);
+        }
+        #mainView .shop-sidebar-card .shop-sidebar-icon {
+            background: rgba(245, 158, 11, 0.18);
+        }
+        #mainView .shop-sidebar-card .shop-sidebar-icon i {
+            color: #FBBF24;
+        }
+        #mainView .shop-sidebar-card .shop-sidebar-arrow {
+            color: #FBBF24;
+        }
+        #mainView .follow-btn {
+            background: #F59E0B;
+            color: #0B0E12;
+        }
+        #mainView .follow-btn:hover {
+            background: #D97706;
+        }
+
+        @media (max-width: 780px) {
+            .exercise-grid {
+                grid-template-columns: 1fr;
+            }
+            .muscle-grid {
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 100%;
+            }
+            .shop-grid {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            }
+            .auth-card {
+                margin: 30px 12px;
+                padding: 28px 18px;
+                border-radius: 24px;
+            }
+            .viz-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .header h1 {
+                font-size: 1.4rem;
+            }
+            .gem-slot {
+                width: 36px;
+                height: 42px;
+            }
+            .gem-slot .gem-shape {
+                width: 28px;
+                height: 30px;
+            }
+            .gem-label-row span {
+                width: 36px;
+                font-size: 0.52rem;
+            }
+            .gem-row {
+                gap: 6px;
+            }
+            .gem-label-row {
+                gap: 6px;
+            }
+            .achievement-toast {
+                top: 10px;
+                right: 8px;
+                left: 8px;
+                max-width: none;
+                border-radius: 12px;
+                padding: 10px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 登录/注册视图 -->
+        <div id="authView" class="view active-view">
+            <div class="auth-card" id="authCard">
+                <h2><i class="fas fa-dumbbell"></i> 健身助手</h2>
+                <div id="loginForm">
+                    <input type="text" id="loginUsername" placeholder="用户名" autocomplete="username">
+                    <input type="password" id="loginPassword" placeholder="密码" autocomplete="current-password">
+                    <button id="doLoginBtn">登 录</button>
+                    <button id="showRegisterBtn" class="switch-btn">没有账号？去注册</button>
+                    <div id="loginError" class="error-msg"></div>
+                </div>
+                <div id="registerForm" style="display:none;">
+                    <input type="text" id="regUsername" placeholder="设置用户名">
+                    <input type="password" id="regPassword" placeholder="设置密码">
+                    <button id="doRegisterBtn">注 册</button>
+                    <button id="showLoginBtn" class="switch-btn">已有账号？去登录</button>
+                    <div id="regError" class="error-msg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主应用视图（登录后显示） -->
+        <div id="mainView" class="view">
+            <div class="header">
+                <h1><i class="fas fa-heartbeat"></i> 健身助手</h1>
+                <div class="sub">专注是最高效的健身利器 · <span id="currentUserDisplay"></span> <button id="logoutBtn" style="background:none; border:none; color:#F87171; margin-left:8px; cursor:pointer;"><i class="fas fa-sign-out-alt"></i> 退出</button></div>
+            </div>
+            <div class="two-columns">
+                <div class="main-content">
+                    <div id="selectView" class="view active-view">
+                        <div class="muscle-grid" id="muscleGrid"></div>
+                        <div class="viz-card">
+                            <div class="viz-title"><i class="fas fa-info-circle"></i> 怎么用？</div>
+                            <p style="font-size:0.78rem;">1. 点击部位 → 2. 选择「跟练模式」（推荐）→ 跟着指引完成动作，数据自动保存。<br>🎬 每个动作都配有「动作示范」动画，新手友好。<br>💎 完成动作收集宝石，解锁等级徽章！</p>
+                        </div>
+                        <div class="viz-row" style="margin-top: 16px;">
+                            <div class="viz-card" id="muscleChartCard">
+                                <div class="viz-title"><i class="fas fa-chart-line"></i> <span id="vizMuscleLabel">肌群可视化进度</span></div>
+                                <div id="chartContainer" class="muscle-chart-container"><div class="placeholder-chart">👈 点击部位查看宝石收集</div></div>
+                                <div class="viz-title" style="margin-top:8px;"><i class="fas fa-shield-alt"></i> 注意事项</div>
+                                <ul style="font-size:0.68rem; padding-left:16px; margin-top:4px;" id="dynamicTips"><li>🔥 注重热身激活身体</li><li>🏋️ 训练前动态拉伸</li></ul>
+                            </div>
+                            <div class="viz-card" id="recentSummaryCard">
+                                <div class="viz-title"><i class="fas fa-history"></i> 最近训练</div>
+                                <div id="recentSummary" style="max-height:180px; overflow-y:auto; font-size:0.68rem;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="trainingView" class="view">
+                        <button class="back-btn" id="backToSelectBtn" style="background:#1F2A37; border:none; color:white; padding:7px 18px; border-radius:36px; margin-bottom:14px; cursor:pointer;"><i class="fas fa-arrow-left"></i> 返回选部位</button>
+                        <div class="mode-switch" style="display:flex; gap:10px; margin-bottom:16px;">
+                            <button id="freeModeBtn" class="mode-btn" style="background:#1F2A37; border:none; padding:7px 14px; border-radius:36px; cursor:pointer; color:#CBD5E1; flex:1;">📋 自由标记模式</button>
+                            <button id="followModeBtn" class="mode-btn" style="background:#1F2A37; border:none; padding:7px 14px; border-radius:36px; cursor:pointer; color:#CBD5E1; flex:1;">🎯 跟练模式（推荐新手）</button>
+                        </div>
+                        <div id="freeModePanel" style="display: block;"></div>
+                        <div id="followModePanel" style="display: none;"></div>
+                        <div class="toolbar" style="justify-content: flex-end; margin-top: 10px;">
+                            <button id="resetCurrentPartBtn" class="tool-btn danger"><i class="fas fa-undo-alt"></i> 重置当前部位</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="viz-sidebar">
+                    <div class="viz-card">
+                        <div class="viz-title"><i class="fas fa-calendar-week"></i> 本周训练计划</div>
+                        <div id="weekPlanContainer" class="week-plan">
+                            <button id="editPlanBtn" class="plan-edit-btn"><i class="fas fa-edit"></i> 设置周计划</button>
+                            <div id="weekPlanList">未设置计划</div>
+                        </div>
+                    </div>
+                    <div class="viz-card">
+                        <div class="viz-title"><i class="fas fa-chart-pie"></i> 总进度</div>
+                        <div class="global-progress">
+                            <div class="circle-container"><canvas id="globalProgressCircle" width="68" height="68" class="circular-progress"></canvas><div class="center-percent" id="centerPercent">0%</div></div>
+                            <div class="progress-stats"><p style="font-size:0.62rem;" id="globalDetail">0 / 0 动作</p><p style="font-size:0.58rem;color:#FBBF24;margin-top:2px;" id="globalXpDisplay">🏅 总经验: 0 XP</p></div>
+                        </div>
+                        <div class="toolbar" style="justify-content: space-between;">
+                            <button id="exportReportBtn" class="tool-btn"><i class="fas fa-download"></i> 导出报告</button>
+                            <button id="resetAllBtn" class="tool-btn danger"><i class="fas fa-trash-alt"></i> 重置全部</button>
+                        </div>
+                    </div>
+                    <div class="viz-card shop-sidebar-card" id="shopSidebarCard">
+                        <div class="shop-sidebar-inner">
+                            <div class="shop-sidebar-icon"><i class="fas fa-store"></i></div>
+                            <div class="shop-sidebar-text">
+                                <div class="shop-sidebar-title">健身装备商城</div>
+                                <div class="shop-sidebar-desc">哑铃 · 蛋白粉 · 护具 · 更多</div>
+                            </div>
+                            <div class="shop-sidebar-arrow"><i class="fas fa-chevron-right"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer style="text-align:center; margin-top:28px; font-size:0.68rem; color:#6B7A8A;">健身助手 · 新手跟练 | 数据自动保存 | 周计划个性化 | 💎 宝石收集系统</footer>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="techModal" class="modal"><div class="modal-content"><h3 id="modalTitle">动作要点</h3><p id="modalText"></p><button class="close-modal" onclick="closeModal()">关闭</button></div></div>
+    <div id="demoModal" class="modal"><div class="modal-content"><h3 id="demoTitle">动作示范</h3><div class="demo-animation"><div class="stickman animate-pull"><div class="body"></div><div class="arm"></div><div class="arm arm-right"></div></div><div class="demo-placeholder">⏳ 待载入动画</div></div><p id="demoDesc"></p><button class="close-modal" onclick="closeDemoModal()">关闭</button></div></div>
+    <div id="planModal" class="modal"><div class="modal-content" style="max-width:500px;"><h3>设置本周训练计划</h3><p>每周训练天数: <input type="number" id="planDays" min="1" max="7" value="3" style="width:60px; background:#1F2A37; border:none; color:white; padding:4px; border-radius:8px;"></p><div id="planDaysSelect"></div><button id="savePlanBtn" class="close-modal" style="margin-top:14px;">保存计划</button></div></div>
+
+    <!-- 商城模态框 -->
+    <div id="shopModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-store"></i> 健身装备商城</h3>
+            <input type="text" id="shopSearchInput" class="shop-search" placeholder="🔍 搜索商品...">
+            <div id="shopItemsGrid" class="shop-grid"></div>
+            <button class="close-modal" onclick="closeShopModal()">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ---------- 用户系统 ----------
+            let currentUser = null;
+            const USERS_KEY = "fitness_users";
+            const USER_PROGRESS_PREFIX = "fitness_progress_";
+            const USER_PLAN_PREFIX = "fitness_plan_";
+            const USER_XP_KEY_PREFIX = "fitness_xp_";
+            const USER_ACHIEVEMENTS_PREFIX = "fitness_achievements_";
+
+            function getUsers() { return JSON.parse(localStorage.getItem(USERS_KEY) || '{}'); }
+
+            function saveUsers(users) { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+
+            function getCurrentUserProgress() { if (!currentUser) return null; return JSON.parse(localStorage.getItem(
+                    USER_PROGRESS_PREFIX + currentUser) || '{}'); }
+
+            function saveCurrentUserProgress(progress) { if (currentUser) localStorage.setItem(USER_PROGRESS_PREFIX +
+                    currentUser, JSON.stringify(progress)); }
+
+            function getCurrentUserPlan() { if (!currentUser) return null; return JSON.parse(localStorage.getItem(
+                    USER_PLAN_PREFIX + currentUser) || '{"days":3,"schedule":{}}'); }
+
+            function saveCurrentUserPlan(plan) { if (currentUser) localStorage.setItem(USER_PLAN_PREFIX + currentUser, JSON
+                    .stringify(plan)); }
+
+            function getCurrentUserXp() { if (!currentUser) return 0; return parseInt(localStorage.getItem(USER_XP_KEY_PREFIX +
+                    currentUser) || '0'); }
+
+            function saveCurrentUserXp(xp) { if (currentUser) localStorage.setItem(USER_XP_KEY_PREFIX + currentUser, xp
+            .toString()); }
+
+            function getCurrentUserAchievements() { if (!currentUser) return []; return JSON.parse(localStorage.getItem(
+                    USER_ACHIEVEMENTS_PREFIX + currentUser) || '[]'); }
+
+            function saveCurrentUserAchievements(achievements) { if (currentUser) localStorage.setItem(
+                    USER_ACHIEVEMENTS_PREFIX + currentUser, JSON.stringify(achievements)); }
+
+            // ---------- 总完成动作计数 ----------
+            function getTotalCompletedActions() {
+                let count = 0;
+                for (let m of allMuscles) {
+                    for (let p of m.phases)
+                        for (let ex of p.exercises) { if (ex.completed) count++; }
+                }
+                return count;
+            }
+
+            // ---------- 商城数据 ----------
+            const shopItems = [
+                { name: "哑铃套装", icon: "fas fa-dumbbell", desc: "家用健身必备，多重量可选" },
+                { name: "蛋白粉", icon: "fas fa-flask", desc: "乳清蛋白，增肌恢复" },
+                { name: "瑜伽垫", icon: "fas fa-square", desc: "防滑耐磨，环保材质" },
+                { name: "弹力带", icon: "fas fa-hand-peace", desc: "阻力训练，全身塑形" },
+                { name: "运动水壶", icon: "fas fa-tint", desc: "大容量，便携防漏" },
+                { name: "健身手套", icon: "fas fa-hand-spock", desc: "防滑护掌，耐磨透气" },
+                { name: "阻力带", icon: "fas fa-link", desc: "多级阻力，康复拉伸" },
+                { name: "跳绳", icon: "fas fa-charging-station", desc: "燃脂神器，便携易收纳" },
+                { name: "护腕", icon: "fas fa-band-aid", desc: "加压支撑，保护关节" },
+                { name: "健身包", icon: "fas fa-bag-shopping", desc: "大容量，干湿分离" },
+                { name: "筋膜枪", icon: "fas fa-gun", desc: "深层放松，缓解酸痛" },
+                { name: "俯卧撑支架", icon: "fas fa-table-tennis", desc: "防滑设计，保护手腕" }
+            ];
+
+            function renderShopGrid(filterText = "") {
+                const grid = document.getElementById("shopItemsGrid");
+                if (!grid) return;
+                const filtered = shopItems.filter(item => item.name.toLowerCase().includes(filterText.toLowerCase()));
+                if (filtered.length === 0) {
+                    grid.innerHTML = '<div class="no-result">😢 没有找到相关商品</div>';
+                    return;
+                }
+                grid.innerHTML = filtered.map(item => `
+                    <div class="shop-item" data-name="${item.name}" data-desc="${item.desc}">
+                        <i class="${item.icon}"></i>
+                        <h4>${item.name}</h4>
+                        <p>${item.desc}</p>
+                    </div>
+                `).join('');
+                document.querySelectorAll('.shop-item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const name = el.dataset.name;
+                        const desc = el.dataset.desc;
+                        alert(`【${name}】\n${desc}\n\n可前往线下门店或电商平台购买。`);
+                    });
+                });
+            }
+
+            function openShopModal() {
+                renderShopGrid("");
+                document.getElementById("shopModal").style.display = "flex";
+                const searchInput = document.getElementById("shopSearchInput");
+                if (searchInput) {
+                    searchInput.value = "";
+                    searchInput.oninput = (e) => renderShopGrid(e.target.value);
+                }
+            }
+
+            function closeShopModal() { document.getElementById("shopModal").style.display = "none"; }
+
+            // ---------- 全部部位数据 ----------
+            const backData = {
+                name: "背部",
+                icon: "fas fa-dragon",
+                phases: [
+                    {
+                        name: "🔥 热身激活",
+                        exercises: [
+                            { name: "跪姿肘屈伸", sets: "2组", reps: "12次",
+                                points: "手肘搭凳，肩胛稳定，重心向后。", icon: "fas fa-hand-peace", completed: false, rpe: 0 },
+                            { name: "凳子肘屈伸", sets: "2组", reps: "10次", points: "肩胛前引，强化三头与背阔联动。",
+                                icon: "fas fa-chair", completed: false, rpe: 0 },
+                            { name: "坐姿后三头伸展", sets: "2组", reps: "12次", points: "大臂内收，感受背阔启动。",
+                                icon: "fas fa-person-seat", completed: false, rpe: 0 },
+                            { name: "肩胛后收激活", sets: "2组", reps: "15次", points: "俯身姿态，主动后收肩胛。",
+                                icon: "fas fa-arrows-spin", completed: false, rpe: 0 }
+                        ]
+                    },
+                    {
+                        name: "💪 正式训练",
+                        exercises: [
+                            { name: "反手高位下拉", sets: "4组", reps: "10-12次", points: "侧重下背部，保持张力。",
+                                icon: "fas fa-arrow-down-wide-short", completed: false, rpe: 0 },
+                            { name: "坐姿划船", sets: "4组", reps: "10-12次", points: "肩胛后收，顶峰收缩。", icon: "fas fa-anchor",
+                                completed: false, rpe: 0 },
+                            { name: "对握高位下拉", sets: "4组", reps: "10-12次", points: "中上背专项，离心控制。",
+                                icon: "fas fa-hand-peace", completed: false, rpe: 0 },
+                            { name: "对握划船", sets: "4组", reps: "10-12次", points: "孤立菱形肌，避免借力。",
+                                icon: "fas fa-arrow-right-arrow-left", completed: false, rpe: 0 },
+                            { name: "俯身杠铃划船", sets: "4组", reps: "8-10次", points: "背部整体厚度，脊柱中立。",
+                                icon: "fas fa-dumbbell", completed: false, rpe: 0 }
+                        ]
+                    },
+                    {
+                        name: "🧘 拉伸放松",
+                        exercises: [
+                            { name: "猫牛式脊柱流动", sets: "2组", reps: "10次", points: "灵活脊柱，放松竖脊肌。", icon: "fas fa-cat",
+                                completed: false, rpe: 0 },
+                            { name: "门框胸廓拉伸", sets: "2组", reps: "30秒", points: "伸展胸肌与背阔。", icon: "fas fa-door-open",
+                                completed: false, rpe: 0 },
+                            { name: "婴儿式背部拉伸", sets: "2组", reps: "30秒", points: "放松下背部。", icon: "fas fa-child",
+                                completed: false, rpe: 0 }
+                        ]
+                    }
+                ]
+            };
+            const chestData = {
+                name: "胸部",
+                icon: "fas fa-chest",
+                phases: [
+                    { name: "🏋️ 胸部热身", exercises: [
+                            { name: "肩关节环绕", sets: "2组", reps: "20次", points: "激活肩袖", icon: "fas fa-arrows-spin",
+                                completed: false, rpe: 0 },
+                            { name: "俯身扩胸", sets: "2组", reps: "15次", points: "动态拉伸胸大肌", icon: "fas fa-expand",
+                                completed: false, rpe: 0 },
+                            { name: "平板支撑肩胛推起", sets: "2组", reps: "12次", points: "激活前锯肌", icon: "fas fa-table",
+                                completed: false, rpe: 0 }
+                        ] },
+                    { name: "🔥 正式动作", exercises: [
+                            { name: "平板杠铃卧推", sets: "4组", reps: "8-12次", points: "肩胛收紧，杠铃落至胸中缝",
+                                icon: "fas fa-dumbbell", completed: false, rpe: 0 },
+                            { name: "上斜哑铃卧推", sets: "4组", reps: "10-12次", points: "刺激上胸，椅背30-45°",
+                                icon: "fas fa-weight-hanging", completed: false, rpe: 0 },
+                            { name: "双杠臂屈伸", sets: "3组", reps: "8-10次", points: "身体前倾，强化下胸",
+                                icon: "fas fa-person-walking-arrow-right", completed: false, rpe: 0 },
+                            { name: "蝴蝶机夹胸", sets: "4组", reps: "12-15次", points: "合拢时挤压胸肌", icon: "fas fa-hand-peace",
+                                completed: false, rpe: 0 }
+                        ] },
+                    { name: "🧘 胸部拉伸", exercises: [
+                            { name: "门框胸肌拉伸", sets: "2组", reps: "30秒", points: "单侧手臂扶框", icon: "fas fa-door-open",
+                                completed: false, rpe: 0 },
+                            { name: "墙角胸部拉伸", sets: "2组", reps: "30秒", points: "双臂扶墙，身体前倾", icon: "fas fa-building",
+                                completed: false, rpe: 0 }
+                        ] }
+                ]
+            };
+            const shoulderData = {
+                name: "肩部",
+                icon: "fas fa-shield-halbed",
+                phases: [
+                    { name: "🎯 肩部激活", exercises: [
+                            { name: "肩部环绕", sets: "2组", reps: "15次", points: "小幅度动态热身", icon: "fas fa-sync-alt",
+                                completed: false, rpe: 0 },
+                            { name: "招财猫动作", sets: "2组", reps: "12次", points: "激活肩袖", icon: "fas fa-cat",
+                                completed: false, rpe: 0 },
+                            { name: "YTW伸展", sets: "2组", reps: "10次", points: "激活肩胛稳定肌群", icon: "fas fa-hand-peace",
+                                completed: false, rpe: 0 }
+                        ] },
+                    { name: "💥 三角肌训练", exercises: [
+                            { name: "站姿哑铃推举", sets: "4组", reps: "10-12次", points: "核心收紧",
+                                icon: "fas fa-person-running", completed: false, rpe: 0 },
+                            { name: "哑铃侧平举", sets: "4组", reps: "12-15次", points: "肘微屈，控制离心", icon: "fas fa-arrow-up",
+                                completed: false, rpe: 0 },
+                            { name: "俯身反向飞鸟", sets: "4组", reps: "12-15次", points: "针对后束", icon: "fas fa-dove",
+                                completed: false, rpe: 0 },
+                            { name: "阿诺德推举", sets: "3组", reps: "10次", points: "旋转哑铃", icon: "fas fa-repeat",
+                                completed: false, rpe: 0 }
+                        ] },
+                    { name: "🧘 肩部拉伸", exercises: [
+                            { name: "手臂交叉拉伸", sets: "2组", reps: "30秒", points: "放松后束", icon: "fas fa-hand-peace",
+                                completed: false, rpe: 0 },
+                            { name: "背后合十拉伸", sets: "2组", reps: "30秒", points: "伸展前侧", icon: "fas fa-hands",
+                                completed: false, rpe: 0 }
+                        ] }
+                ]
+            };
+            const absData = {
+                name: "腹部",
+                icon: "fas fa-bicycle",
+                phases: [
+                    { name: "🔥 核心激活", exercises: [
+                            { name: "死虫式", sets: "2组", reps: "12次", points: "稳定腰椎", icon: "fas fa-bug", completed: false,
+                                rpe: 0 },
+                            { name: "鸟狗式", sets: "2组", reps: "10次/侧", points: "抗旋转核心", icon: "fas fa-dog",
+                                completed: false, rpe: 0 }
+                        ] },
+                    { name: "💪 腹肌轰炸", exercises: [
+                            { name: "悬垂举腿", sets: "3组", reps: "10-15次", points: "核心绷紧", icon: "fas fa-leg",
+                                completed: false, rpe: 0 },
+                            { name: "仰卧卷腹", sets: "4组", reps: "20次", points: "下背贴地", icon: "fas fa-bed", completed: false,
+                                rpe: 0 },
+                            { name: "平板支撑", sets: "3组", reps: "45秒", points: "肩肘垂直", icon: "fas fa-table",
+                                completed: false, rpe: 0 },
+                            { name: "空中蹬车", sets: "3组", reps: "20次/侧", points: "强化腹斜肌", icon: "fas fa-bicycle",
+                                completed: false, rpe: 0 },
+                            { name: "反向卷腹", sets: "3组", reps: "15次", points: "骨盆后倾", icon: "fas fa-arrow-down",
+                                completed: false, rpe: 0 }
+                        ] },
+                    { name: "🧘 腹部拉伸", exercises: [
+                            { name: "眼镜蛇式", sets: "2组", reps: "20秒", points: "伸展腹直肌", icon: "fas fa-snake",
+                                completed: false, rpe: 0 },
+                            { name: "侧腹拉伸", sets: "2组", reps: "20秒/侧", points: "伸展腹斜肌",
+                                icon: "fas fa-person-walking", completed: false, rpe: 0 }
+                        ] }
+                ]
+            };
+            const legsData = {
+                name: "腿部",
+                icon: "fas fa-walking",
+                phases: [
+                    { name: "🦵 腿部热身", exercises: [
+                            { name: "开合跳", sets: "2组", reps: "30秒", points: "提升心率", icon: "fas fa-heartbeat",
+                                completed: false, rpe: 0 },
+                            { name: "高抬腿", sets: "2组", reps: "30秒", points: "激活髋屈肌", icon: "fas fa-running",
+                                completed: false, rpe: 0 },
+                            { name: "动态弓步蹲", sets: "2组", reps: "10次/腿", points: "活动下肢关节",
+                                icon: "fas fa-person-walking-arrow-right", completed: false, rpe: 0 }
+                        ] },
+                    { name: "🏋️ 下肢力量", exercises: [
+                            { name: "高杠深蹲", sets: "4组", reps: "8-10次", points: "核心稳定，大腿平行地面",
+                                icon: "fas fa-person-walking-arrow-right", completed: false, rpe: 0 },
+                            { name: "罗马尼亚硬拉", sets: "4组", reps: "10-12次", points: "髋主导", icon: "fas fa-hand-fist",
+                                completed: false, rpe: 0 },
+                            { name: "保加利亚分腿蹲", sets: "3组", reps: "10次/腿", points: "改善单侧力量",
+                                icon: "fas fa-shoe-prints", completed: false, rpe: 0 },
+                            { name: "腿举机", sets: "4组", reps: "12次", points: "腰背紧贴", icon: "fas fa-chair", completed: false,
+                                rpe: 0 },
+                            { name: "站姿提踵", sets: "4组", reps: "15次", points: "刺激小腿", icon: "fas fa-foot", completed: false,
+                                rpe: 0 }
+                        ] },
+                    { name: "🧘 腿部拉伸", exercises: [
+                            { name: "大腿前侧拉伸", sets: "2组", reps: "30秒", points: "站立屈膝", icon: "fas fa-running",
+                                completed: false, rpe: 0 },
+                            { name: "腘绳肌拉伸", sets: "2组", reps: "30秒", points: "坐姿体前屈", icon: "fas fa-sitting",
+                                completed: false, rpe: 0 },
+                            { name: "小腿拉伸", sets: "2组", reps: "30秒", points: "推墙", icon: "fas fa-hand-peace",
+                                completed: false, rpe: 0 }
+                        ] }
+                ]
+            };
+            const armsData = {
+                name: "手臂",
+                icon: "fas fa-hand-fist",
+                phases: [
+                    { name: "💪 手臂激活", exercises: [
+                            { name: "手腕环绕", sets: "2组", reps: "15次", points: "预热腕关节", icon: "fas fa-hand-peace",
+                                completed: false, rpe: 0 },
+                            { name: "轻重量二头弯举", sets: "2组", reps: "15次", points: "激活肱二头肌",
+                                icon: "fas fa-hand-back-fist", completed: false, rpe: 0 }
+                        ] },
+                    { name: "🔥 二头三头轰炸", exercises: [
+                            { name: "杠铃弯举", sets: "4组", reps: "10-12次", points: "大臂紧贴躯干",
+                                icon: "fas fa-hand-back-fist", completed: false, rpe: 0 },
+                            { name: "哑铃交替弯举", sets: "3组", reps: "12次/侧", points: "旋转手腕", icon: "fas fa-hand-peace",
+                                completed: false, rpe: 0 },
+                            { name: "绳索下压", sets: "4组", reps: "12-15次", points: "大臂固定", icon: "fas fa-arrow-down",
+                                completed: false, rpe: 0 },
+                            { name: "仰卧杠铃臂屈伸", sets: "3组", reps: "10-12次", points: "肘尖朝上", icon: "fas fa-bed",
+                                completed: false, rpe: 0 },
+                            { name: "锤式弯举", sets: "3组", reps: "12次", points: "对握哑铃", icon: "fas fa-gavel",
+                                completed: false, rpe: 0 }
+                        ] },
+                    { name: "🧘 手臂拉伸", exercises: [
+                            { name: "三头拉伸", sets: "2组", reps: "30秒", points: "手臂过头屈肘", icon: "fas fa-hand-spock",
+                                completed: false, rpe: 0 },
+                            { name: "二头拉伸", sets: "2组", reps: "30秒", points: "手掌外旋", icon: "fas fa-hand-peace",
+                                completed: false, rpe: 0 }
+                        ] }
+                ]
+            };
+            const allMuscles = [backData, chestData, shoulderData, absData, legsData, armsData];
+
+            const muscleGroupMap = {
+                "背部": { labels: ["背阔肌", "上斜方肌", "菱形肌", "竖脊肌", "大圆肌"], base: [35, 40, 38, 32, 36] },
+                "胸部": { labels: ["胸大肌上部", "胸大肌中部", "胸大肌下部", "前锯肌", "三角肌前束"], base: [40, 45, 42, 30, 38] },
+                "肩部": { labels: ["三角肌前束", "三角肌中束", "三角肌后束", "冈上肌", "斜方肌上束"], base: [38, 42, 35, 30, 40] },
+                "腹部": { labels: ["腹直肌上段", "腹直肌下段", "腹外斜肌", "腹横肌", "髂腰肌"], base: [45, 40, 35, 30, 25] },
+                "腿部": { labels: ["股四头肌", "腘绳肌", "臀大肌", "腓肠肌", "胫骨前肌"], base: [50, 45, 48, 30, 25] },
+                "手臂": { labels: ["肱二头肌", "肱三头肌", "肱肌", "前臂屈肌", "前臂伸肌"], base: [40, 45, 35, 30, 30] }
+            };
+
+            let currentMuscle = null,
+                currentMode = "free",
+                followIndex = 0,
+                flatExercises = [];
+            let recentActions = [];
+            let globalXp = 0;
+            let unlockedAchievements = [];
+
+            // ========== 游戏化等级系统 ==========
+            function getMuscleLevelInfo(ratio) {
+                if (ratio >= 1) return { level: 5, name: "传奇", icon: "👑", cssClass: "badge-lv-legendary",
+                    color: "#E8BFFF" };
+                if (ratio >= 0.7) return { level: 4, name: "钻石", icon: "💎", cssClass: "badge-lv-diamond",
+                color: "#B9F2FF" };
+                if (ratio >= 0.4) return { level: 3, name: "黄金", icon: "🥇", cssClass: "badge-lv-gold", color: "#FFD700" };
+                if (ratio >= 0.2) return { level: 2, name: "白银", icon: "🥈", cssClass: "badge-lv-silver",
+                color: "#D0D5DD" };
+                return { level: 1, name: "青铜", icon: "🥉", cssClass: "badge-lv-bronze", color: "#E8A860" };
+            }
+
+            function getCardBadgeInfo(ratio) {
+                if (ratio >= 1) return { text: "👑 传奇", cssClass: "badge-diamond" };
+                if (ratio >= 0.7) return { text: "💎 钻石", cssClass: "badge-diamond" };
+                if (ratio >= 0.4) return { text: "🥇 黄金", cssClass: "badge-gold" };
+                if (ratio >= 0.2) return { text: "🥈 白银", cssClass: "badge-silver" };
+                if (ratio > 0) return { text: "🥉 青铜", cssClass: "badge-bronze" };
+                return null;
+            }
+
+            // ========== 粒子特效系统 ==========
+            function spawnParticles(element, count = 16, colors = ['#F59E0B', '#FFD700', '#FBBF24', '#FFFFFF',
+            '#FFB347']) {
+                if (!element) return;
+                const rect = element.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const fragment = document.createDocumentFragment();
+                for (let i = 0; i < count; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 30 + Math.random() * 80;
+                    const px = Math.cos(angle) * distance;
+                    const py = Math.sin(angle) * distance;
+                    const size = 3 + Math.random() * 7;
+                    particle.style.cssText = `
+                        left: ${cx}px;
+                        top: ${cy}px;
+                        width: ${size}px;
+                        height: ${size}px;
+                        background: ${colors[Math.floor(Math.random() * colors.length)]};
+                        --px: ${px}px;
+                        --py: ${py}px;
+                        animation-duration: ${0.5 + Math.random() * 0.8}s;
+                    `;
+                    fragment.appendChild(particle);
+                }
+                document.body.appendChild(fragment);
+                setTimeout(() => {
+                    document.querySelectorAll('.particle').forEach(p => {
+                        if (p.style.left === `${cx}px` || Math.abs(parseFloat(p.style.left) - cx) < 5) p
+                            .remove();
+                    });
+                }, 1500);
+            }
+
+            // ========== 浮动奖励文字 ==========
+            function showFloatReward(element, text, isCritical = false) {
+                if (!element) return;
+                const rect = element.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top;
+                const reward = document.createElement('div');
+                reward.className = 'float-reward' + (isCritical ? ' critical' : '');
+                reward.textContent = text;
+                reward.style.cssText = `
+                    left: ${x}px;
+                    top: ${y}px;
+                    color: ${isCritical ? '#FFD700' : '#FBBF24'};
+                `;
+                document.body.appendChild(reward);
+                setTimeout(() => reward.remove(), isCritical ? 1800 : 1500);
+            }
+
+            // ========== 成就Toast通知 ==========
+            function showAchievementToast(title, desc, icon = '🏆') {
+                const toast = document.createElement('div');
+                toast.className = 'achievement-toast';
+                toast.innerHTML = `
+                    <div class="toast-icon">${icon}</div>
+                    <div class="toast-text">
+                        <div class="toast-title">${title}</div>
+                        <div class="toast-desc">${desc}</div>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3200);
+            }
+
+            // ========== 成就检查系统 ==========
+            function checkAchievements() {
+                if (!currentUser) return;
+                const totalDone = getTotalCompletedActions();
+                const allAchievements = getCurrentUserAchievements();
+                const newAchievements = [];
+
+                const checkAndAdd = (id, title, desc, icon) => {
+                    if (!allAchievements.includes(id)) {
+                        allAchievements.push(id);
+                        newAchievements.push({ title, desc, icon });
+                    }
+                };
+
+                if (totalDone >= 1) checkAndAdd('first_action', '🎯 初次尝试', '完成了第一个健身动作！', '🎯');
+                if (totalDone >= 10) checkAndAdd('10_actions', '⭐ 健身新星', '累计完成10个动作', '⭐');
+                if (totalDone >= 50) checkAndAdd('50_actions', '🏆 健身达人', '累计完成50个动作！', '🏆');
+                if (totalDone >= 100) checkAndAdd('100_actions', '💪 健身狂热者', '累计完成100个动作！！', '💪');
+
+                for (let m of allMuscles) {
+                    let done = 0,
+                        total = 0;
+                    for (let p of m.phases)
+                        for (let ex of p.exercises) { total++; if (ex.completed) done++; }
+                    if (total > 0 && done === total) {
+                        checkAndAdd(`muscle_100_${m.name}`, `👑 ${m.name}大师`, `${m.name}部位全部动作完成！`, '👑');
+                    }
+                }
+
+                const allDone = allMuscles.every(m => {
+                    for (let p of m.phases)
+                        for (let ex of p.exercises) { if (!ex.completed) return false; }
+                    return true;
+                });
+                if (allDone) checkAndAdd('all_complete', '🌟 传奇健身者', '所有部位所有动作全部完成！太强了！', '🌟');
+
+                if (newAchievements.length > 0) {
+                    saveCurrentUserAchievements(allAchievements);
+                    for (const ach of newAchievements) {
+                        setTimeout(() => showAchievementToast(ach.title, ach.desc, ach.icon), 400);
+                    }
+                }
+                return newAchievements.length > 0;
+            }
+
+            // ========== 宝石收集可视化（替代旧进度条）==========
+            function showChartForMuscle(muscleName, completionRatio) {
+                const container = document.getElementById('chartContainer');
+                if (!container) return;
+                const info = muscleGroupMap[muscleName];
+                if (!info) {
+                    container.innerHTML = '<div class="placeholder-chart">暂无该部位肌群数据</div>';
+                    return;
+                }
+
+                const levelInfo = getMuscleLevelInfo(completionRatio);
+                const gemCount = info.labels.length; // 5颗宝石
+                // 每颗宝石代表20%进度
+                const gemsFilled = Math.min(gemCount, Math.floor(completionRatio * gemCount));
+                const partialGemIndex = gemsFilled < gemCount ? gemsFilled : -1;
+                const partialFillAmount = (completionRatio * gemCount) - gemsFilled;
+
+                let html = '<div class="gem-collection-panel">';
+
+                // 等级徽章
+                html += `
+                    <div class="level-badge-container">
+                        <span class="level-badge ${levelInfo.cssClass}">
+                            <span class="badge-icon">${levelInfo.icon}</span> ${levelInfo.name}级 · ${muscleName}
+                        </span>
+                    </div>
+                `;
+
+                // 宝石行
+                html += '<div class="gem-row">';
+                for (let i = 0; i < gemCount; i++) {
+                    let gemClass = '';
+                    if (i < gemsFilled) {
+                        gemClass = 'gem-filled-full';
+                    } else if (i === partialGemIndex && partialFillAmount > 0) {
+                        gemClass = 'gem-filled-partial';
+                    }
+                    html += `
+                        <div class="gem-slot" data-gem-index="${i}">
+                            <div class="gem-shape ${gemClass}"></div>
+                            <div class="gem-sparkle"></div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+
+                // 标签行
+                html += '<div class="gem-label-row">';
+                for (let i = 0; i < gemCount; i++) {
+                    const activeClass = i < gemsFilled ? ' label-active' : '';
+                    html += `<span class="${activeClass}">${info.labels[i]}</span>`;
+                }
+                html += '</div>';
+
+                // XP经验条
+                const xpPercent = Math.round(completionRatio * 100);
+                html += `
+                    <div class="xp-bar-container">
+                        <div class="xp-bar-fill" style="width:${xpPercent}%;"></div>
+                    </div>
+                    <div class="xp-label">💎 ${xpPercent}% 完成 · ${gemsFilled}/${gemCount} 宝石收集</div>
+                `;
+
+                html += '</div>';
+                container.innerHTML = html;
+
+                // 如果完成度100%，给所有宝石添加弹入动画
+                if (completionRatio >= 1) {
+                    setTimeout(() => {
+                        const slots = container.querySelectorAll('.gem-slot');
+                        slots.forEach((slot, idx) => {
+                            setTimeout(() => {
+                                slot.classList.add('just-filled');
+                                setTimeout(() => slot.classList.remove('just-filled'), 600);
+                            }, idx * 100);
+                        });
+                    }, 200);
+                }
+            }
+
+            function updateCurrentProgressAndChart() {
+                if (!currentMuscle) return;
+                let total = 0,
+                    done = 0;
+                for (let p of currentMuscle.phases)
+                    for (let ex of p.exercises) { total++; if (ex.completed) done++; }
+                const ratio = total === 0 ? 0 : done / total;
+                showChartForMuscle(currentMuscle.name, ratio);
+                // 同时更新肌群卡片徽章
+                updateMuscleCardBadges();
+            }
+
+            function updateMuscleCardBadges() {
+                const cards = document.querySelectorAll('.muscle-card');
+                cards.forEach(card => {
+                    const muscleName = card.querySelector('h3')?.textContent;
+                    if (!muscleName) return;
+                    const muscle = allMuscles.find(m => m.name === muscleName);
+                    if (!muscle) return;
+                    let total = 0,
+                        done = 0;
+                    for (let p of muscle.phases)
+                        for (let ex of p.exercises) { total++; if (ex.completed) done++; }
+                    const ratio = total === 0 ? 0 : done / total;
+                    const badgeInfo = getCardBadgeInfo(ratio);
+                    let badgeEl = card.querySelector('.card-badge');
+                    if (badgeInfo) {
+                        if (!badgeEl) {
+                            badgeEl = document.createElement('span');
+                            badgeEl.className = 'card-badge';
+                            card.appendChild(badgeEl);
+                        }
+                        badgeEl.textContent = badgeInfo.text;
+                        badgeEl.className = 'card-badge ' + badgeInfo.cssClass;
+                    } else if (badgeEl) {
+                        badgeEl.remove();
+                    }
+                });
+            }
+
+            function updateGlobalXpDisplay() {
+                const xpEl = document.getElementById('globalXpDisplay');
+                if (xpEl) {
+                    const xp = getCurrentUserXp();
+                    const level = Math.floor(xp / 100) + 1;
+                    const xpInLevel = xp % 100;
+                    xpEl.innerHTML = `🏅 Lv.${level} · ${xp} XP (${xpInLevel}/100)`;
+                }
+            }
+
+            function addXp(amount) {
+                globalXp += amount;
+                saveCurrentUserXp(globalXp);
+                updateGlobalXpDisplay();
+            }
+
+            function saveUserProgress() {
+                const progress = { muscles: {} };
+                for (let m of allMuscles) {
+                    const exList = [];
+                    for (let p of m.phases)
+                        for (let ex of p.exercises) exList.push({ name: ex.name, completed: ex.completed, rpe: ex.rpe });
+                    progress.muscles[m.name] = exList;
+                }
+                saveCurrentUserProgress(progress);
+                updateGlobalProgress();
+                updateGlobalXpDisplay();
+                updateMuscleCardBadges();
+            }
+
+            function loadUserProgress() {
+                const saved = getCurrentUserProgress();
+                if (saved && saved.muscles) {
+                    for (let m of allMuscles) {
+                        const savedM = saved.muscles[m.name];
+                        if (savedM) {
+                            for (let p of m.phases) {
+                                for (let ex of p.exercises) {
+                                    const found = savedM.find(s => s.name === ex.name);
+                                    if (found) { ex.completed = found.completed;
+                                        ex.rpe = found.rpe; }
+                                }
+                            }
+                        }
+                    }
+                }
+                globalXp = getCurrentUserXp();
+                unlockedAchievements = getCurrentUserAchievements();
+                updateGlobalProgress();
+                updateGlobalXpDisplay();
+                updateMuscleCardBadges();
+            }
+
+            function getGlobalCompletion() {
+                let total = 0,
+                    done = 0;
+                for (let m of allMuscles) {
+                    for (let p of m.phases)
+                        for (let ex of p.exercises) { total++; if (ex.completed) done++; }
+                }
+                return { total, done, percent: total === 0 ? 0 : Math.round(done / total * 100) };
+            }
+
+            function updateGlobalProgress() {
+                const { total, done, percent } = getGlobalCompletion();
+                document.getElementById('centerPercent').innerText = percent + '%';
+                document.getElementById('globalDetail').innerHTML = `${done} / ${total} 动作`;
+                if (window.globalCircleChart) {
+                    window.globalCircleChart.data.datasets[0].data = [percent, 100 - percent];
+                    window.globalCircleChart.update();
+                }
+            }
+
+            function updateRecentSummary() {
+                const container = document.getElementById('recentSummary');
+                if (!container) return;
+                if (recentActions.length === 0) { container.innerHTML = '<div style="color:#7F8FA4;">暂无记录</div>'; return; }
+                container.innerHTML = recentActions.map(a =>
+                    `<div style="margin-bottom:7px;"><i class="fas fa-check-circle" style="color:#FBBF24;"></i> ${a.muscle} · ${a.exercise}<br><span style="font-size:0.6rem;color:#7F8FA4;">${a.time}</span></div>`
+                    ).join('');
+            }
+
+            function addRecent(muscleName, exerciseName) {
+                recentActions.unshift({ muscle: muscleName, exercise: exerciseName, time: new Date().toLocaleTimeString() });
+                if (recentActions.length > 6) recentActions.pop();
+                updateRecentSummary();
+                localStorage.setItem(`recent_${currentUser}`, JSON.stringify(recentActions));
+            }
+
+            function loadRecent() {
+                const stored = localStorage.getItem(`recent_${currentUser}`);
+                if (stored) recentActions = JSON.parse(stored);
+                updateRecentSummary();
+            }
+
+            function renderWeekPlan() {
+                const plan = getCurrentUserPlan();
+                const days = plan.days || 3;
+                const schedule = plan.schedule || {};
+                const weekDays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+                let html =
+                    `<div style="margin-bottom:6px; font-size:0.75rem;">每周训练 ${days} 天 · 点击可切换部位</div>`;
+                for (let i = 0; i < 7; i++) {
+                    const day = weekDays[i];
+                    const part = schedule[i] || "休息";
+                    html +=
+                        `<div class="plan-day" data-day-index="${i}"><span class="day">${day}</span><span class="part">${part}</span></div>`;
+                }
+                document.getElementById('weekPlanList').innerHTML = html;
+            }
+
+            function bindWeekPlanClick() {
+                const weekPlanList = document.getElementById('weekPlanList');
+                if (!weekPlanList) return;
+                weekPlanList.addEventListener('click', (e) => {
+                    const planDay = e.target.closest('.plan-day');
+                    if (!planDay) return;
+                    const dayIndex = parseInt(planDay.dataset.dayIndex);
+                    if (isNaN(dayIndex)) return;
+                    const plan = getCurrentUserPlan();
+                    const schedule = plan.schedule || {};
+                    const parts = ["休息", ...allMuscles.map(m => m.name)];
+                    const currentPart = schedule[dayIndex] || "休息";
+                    let currentIndex = parts.indexOf(currentPart);
+                    if (currentIndex === -1) currentIndex = 0;
+                    const nextIndex = (currentIndex + 1) % parts.length;
+                    schedule[dayIndex] = parts[nextIndex];
+                    plan.schedule = schedule;
+                    saveCurrentUserPlan(plan);
+                    renderWeekPlan();
+                });
+            }
+
+            function showPlanModal() {
+                const plan = getCurrentUserPlan();
+                document.getElementById('planDays').value = plan.days || 3;
+                generateDaySelectors(plan.days || 3, plan.schedule || {});
+                document.getElementById('planModal').style.display = 'flex';
+            }
+
+            function generateDaySelectors(days, currentSchedule) {
+                const container = document.getElementById('planDaysSelect');
+                container.innerHTML = '';
+                const weekDays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+                const parts = allMuscles.map(m => m.name);
+                for (let i = 0; i < days; i++) {
+                    const div = document.createElement('div');
+                    div.style.margin = '10px 0';
+                    div.innerHTML = `<label>${weekDays[i]} 训练部位: </label>
+                    <select id="daySelect_${i}" style="background:#1F2A37; border:none; color:white; padding:6px; border-radius:12px;">
+                        ${parts.map(p => `<option value="${p}" ${currentSchedule[i]===p ? 'selected' : ''}>${p}</option>`).join('')}
+                    </select>`;
+                    container.appendChild(div);
+                }
+            }
+
+            function savePlan() {
+                const days = parseInt(document.getElementById('planDays').value);
+                const schedule = {};
+                for (let i = 0; i < days; i++) {
+                    const select = document.getElementById(`daySelect_${i}`);
+                    if (select) schedule[i] = select.value;
+                }
+                saveCurrentUserPlan({ days, schedule });
+                renderWeekPlan();
+                closePlanModal();
+            }
+
+            function closePlanModal() { document.getElementById('planModal').style.display = 'none'; }
+
+            function showDemo(exerciseName, points) {
+                document.getElementById('demoTitle').innerText = exerciseName + " 动作示范";
+                document.getElementById('demoDesc').innerHTML = `<strong>动作要点：</strong> ${points}`;
+                document.getElementById('demoModal').style.display = 'flex';
+            }
+
+            function closeDemoModal() { document.getElementById('demoModal').style.display = 'none'; }
+            window.closeModal = () => document.getElementById('techModal').style.display = 'none';
+            window.closeDemoModal = closeDemoModal;
+            window.closeShopModal = closeShopModal;
+
+            // ========== 处理动作完成（统一奖励触发）==========
+            function handleExerciseComplete(ex, muscleName, triggerElement) {
+                if (ex.completed) return; // 已经完成过了
+                ex.completed = true;
+                addRecent(muscleName, ex.name);
+
+                // XP奖励
+                const isCritical = Math.random() < 0.15;
+                const baseXp = 10;
+                const xpGain = isCritical ? baseXp * 2 : baseXp;
+                addXp(xpGain);
+
+                // 浮动文字
+                const rewardText = isCritical ? `🔥 暴击! +${xpGain} XP` : `+${xpGain} XP`;
+                showFloatReward(triggerElement, rewardText, isCritical);
+
+                // 粒子特效
+                const particleColors = isCritical ?
+                    ['#FFD700', '#FFF', '#FFB347', '#FFE55C', '#FFAA00', '#FFF8DC'] :
+                    ['#F59E0B', '#FFD700', '#FBBF24', '#FFFFFF'];
+                spawnParticles(triggerElement, isCritical ? 24 : 14, particleColors);
+
+                saveUserProgress();
+                updateCurrentProgressAndChart();
+                updateGlobalProgress();
+                updateMuscleCardBadges();
+
+                // 延迟检查成就
+                setTimeout(() => checkAchievements(), 600);
+            }
+
+            function renderFreeMode(muscle) {
+                const container = document.getElementById('freeModePanel');
+                container.innerHTML = '';
+                muscle.phases.forEach((phase, idx) => {
+                    const phaseCard = document.createElement('div');
+                    phaseCard.className = 'phase-card';
+                    phaseCard.innerHTML =
+                        `<div class="phase-title"><i class="fas fa-list-ul"></i><span>${phase.name}</span></div><div class="exercise-grid" id="freeGrid-${idx}"></div>`;
+                    container.appendChild(phaseCard);
+                    const grid = phaseCard.querySelector('.exercise-grid');
+                    phase.exercises.forEach((ex) => {
+                        const card = document.createElement('div');
+                        card.className = `exercise-card ${ex.completed ? 'completed' : ''}`;
+                        let starsHtml = '';
+                        for (let i = 1; i <= 5; i++) starsHtml +=
+                            `<i class="fa${ex.rpe >= i ? 's' : 'r'} fa-star" data-rpe="${i}"></i>`;
+                        card.innerHTML = `
+                        <div class="card-header"><div class="exercise-name"><i class="${ex.icon}"></i> ${ex.name}</div><div class="sets-reps">${ex.sets} · ${ex.reps}</div></div>
+                        <div class="action-buttons"><button class="demo-btn"><i class="fas fa-play-circle"></i> 动作示范</button></div>
+                        <div class="tech-detail"><i class="fas fa-info-circle"></i> 点击查看技术详情</div>
+                        <div class="rpe-area"><span>RPE自评:</span><div class="stars">${starsHtml}</div><span style="font-size:0.65rem;">(1-5)</span></div>
+                        <div class="complete-btn"><div class="check-icon ${ex.completed ? 'active' : ''}"><i class="fas ${ex.completed ? 'fa-check-circle' : 'fa-circle-check'}"></i> ${ex.completed ? '已完成' : '标记完成'}</div></div>
+                    `;
+                        grid.appendChild(card);
+                        const demoBtn = card.querySelector('.demo-btn');
+                        demoBtn.addEventListener('click', (e) => { e.stopPropagation();
+                            showDemo(ex.name, ex.points); });
+                        const techBtn = card.querySelector('.tech-detail');
+                        techBtn.addEventListener('click', () => { document.getElementById('modalTitle').innerText =
+                                ex.name;
+                            document.getElementById('modalText').innerText = ex.points;
+                            document.getElementById('techModal').style.display = 'flex'; });
+                        const checkBtn = card.querySelector('.check-icon');
+                        checkBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            if (ex.completed) {
+                                ex.completed = false;
+                                saveUserProgress();
+                                renderFreeMode(muscle);
+                                updateCurrentProgressAndChart();
+                                updateMuscleCardBadges();
+                                updateGlobalProgress();
+                            } else {
+                                handleExerciseComplete(ex, muscle.name, checkBtn);
+                                renderFreeMode(muscle);
+                            }
+                        });
+                        const starsDiv = card.querySelector('.stars');
+                        starsDiv.querySelectorAll('.fa-star').forEach(star => {
+                            star.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const rpeVal = parseInt(star.dataset.rpe);
+                                ex.rpe = rpeVal;
+                                saveUserProgress();
+                                renderFreeMode(muscle);
+                            });
+                        });
+                    });
+                });
+                updateCurrentProgressAndChart();
+            }
+
+            function buildFlatExercises(muscle) {
+                const flat = [];
+                for (let phase of muscle.phases) {
+                    for (let ex of phase.exercises) flat.push({ phaseName: phase.name, exercise: ex });
+                }
+                return flat;
+            }
+
+            function updateFollowDisplay() {
+                const container = document.getElementById('followModePanel');
+                if (!currentMuscle) return;
+                const exercises = flatExercises;
+                if (followIndex >= exercises.length) {
+                    container.innerHTML =
+                        `<div class="follow-mode-container"><div class="finish-message"><i class="fas fa-trophy" style="font-size:3rem; color:#FBBF24;"></i><h2>🎉 恭喜完成！</h2><p>所有动作已完成，你真棒！</p><button class="follow-btn" id="resetFollowBtn">重新跟练</button></div></div>`;
+                    const resetBtn = document.getElementById('resetFollowBtn');
+                    if (resetBtn) resetBtn.addEventListener('click', () => { resetCurrentPart();
+                        followIndex = 0;
+                        updateFollowDisplay(); });
+                    return;
+                }
+                const current = exercises[followIndex];
+                const ex = current.exercise;
+                container.innerHTML = `
+                <div class="follow-mode-container">
+                    <div class="follow-progress">第 ${followIndex+1} / ${exercises.length} 个动作 · ${current.phaseName}</div>
+                    <div class="current-exercise">
+                        <h2><i class="${ex.icon}"></i> ${ex.name}</h2>
+                        <div class="sets-reps" style="display:inline-block;">${ex.sets} · ${ex.reps}</div>
+                        <button class="follow-demo" id="followDemoBtn"><i class="fas fa-play-circle"></i> 观看动作示范</button>
+                        <div class="follow-points"><i class="fas fa-info-circle"></i> ${ex.points}</div>
+                        <button class="follow-btn" id="doCompleteBtn">✅ 完成这组，下一组</button>
+                    </div>
+                </div>
+            `;
+                const demoBtn = document.getElementById('followDemoBtn');
+                if (demoBtn) demoBtn.addEventListener('click', () => showDemo(ex.name, ex.points));
+                const completeBtn = document.getElementById('doCompleteBtn');
+                if (completeBtn) {
+                    completeBtn.addEventListener('click', () => {
+                        if (!ex.completed) {
+                            handleExerciseComplete(ex, currentMuscle.name, completeBtn);
+                        }
+                        followIndex++;
+                        updateFollowDisplay();
+                        updateCurrentProgressAndChart();
+                        updateGlobalProgress();
+                        updateMuscleCardBadges();
+                    });
+                }
+            }
+
+            function enterFollowMode() {
+                if (!currentMuscle) return;
+                flatExercises = buildFlatExercises(currentMuscle);
+                let startIdx = 0;
+                for (let i = 0; i < flatExercises.length; i++) {
+                    if (!flatExercises[i].exercise.completed) { startIdx = i; break; } else startIdx = i + 1;
+                }
+                followIndex = startIdx;
+                updateFollowDisplay();
+            }
+
+            function resetCurrentPart() {
+                if (!currentMuscle) return;
+                for (let p of currentMuscle.phases)
+                    for (let ex of p.exercises) { ex.completed = false;
+                        ex.rpe = 0; }
+                saveUserProgress();
+                if (currentMode === "free") renderFreeMode(currentMuscle);
+                else { followIndex = 0;
+                    enterFollowMode(); }
+                updateCurrentProgressAndChart();
+                updateGlobalProgress();
+                updateMuscleCardBadges();
+            }
+
+            function resetAll() {
+                if (confirm('重置所有部位数据？（经验值和成就将保留）')) {
+                    for (let m of allMuscles)
+                        for (let p of m.phases)
+                            for (let ex of p.exercises) { ex.completed = false;
+                                ex.rpe = 0; }
+                    recentActions = [];
+                    localStorage.removeItem(`recent_${currentUser}`);
+                    saveUserProgress();
+                    loadRecent();
+                    if (currentMuscle) {
+                        if (currentMode === "free") renderFreeMode(currentMuscle);
+                        else { followIndex = 0;
+                            enterFollowMode(); }
+                        updateCurrentProgressAndChart();
+                    }
+                    updateGlobalProgress();
+                    updateMuscleCardBadges();
+                }
+            }
+
+            function exportReport() {
+                const report = {
+                    exportTime: new Date().toISOString(),
+                    totalProgress: getGlobalCompletion(),
+                    totalXp: getCurrentUserXp(),
+                    level: Math.floor(getCurrentUserXp() / 100) + 1,
+                    achievements: getCurrentUserAchievements(),
+                    muscles: allMuscles.map(m => ({
+                        name: m.name,
+                        exercises: m.phases.flatMap(p => p.exercises.map(e => ({ name: e.name,
+                            completed: e.completed, rpe: e.rpe })))
+                    }))
+                };
+                const dataStr = JSON.stringify(report, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `training_report_${new Date().toISOString().slice(0,19)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            function updateSidebarTips(name) {
+                const tips = {
+                    "背部": ["⚠️ 保持脊柱中立", "⚠️ 肩胛后收下沉", "⚠️ 离心控制2-3秒"],
+                    "胸部": ["⚠️ 沉肩挺胸", "⚠️ 肘部夹角约75°", "⚠️ 手腕中立"],
+                    "肩部": ["⚠️ 不要借力", "⚠️ 侧平举肘微屈", "⚠️ 后束肩胛后收"],
+                    "腹部": ["⚠️ 下背贴地", "⚠️ 不扯脖子", "⚠️ 平板不塌腰"],
+                    "腿部": ["⚠️ 膝盖与脚尖同向", "⚠️ 硬拉背挺直", "⚠️ 落地缓冲"],
+                    "手臂": ["⚠️ 大臂固定", "⚠️ 手腕不反折", "⚠️ 热身肘关节"]
+                };
+                document.getElementById('dynamicTips').innerHTML = (tips[name] || tips["背部"]).map(t =>
+                    `<li>${t}</li>`).join('');
+                document.getElementById('vizMuscleLabel').innerHTML = `${name} 肌群可视化进度`;
+            }
+
+            function openTrainingPlan(muscle) {
+                currentMuscle = muscle;
+                currentMode = "free";
+                document.getElementById('freeModeBtn').style.background = '#3B82F6';
+                document.getElementById('followModeBtn').style.background = '#1F2A37';
+                document.getElementById('freeModePanel').style.display = 'block';
+                document.getElementById('followModePanel').style.display = 'none';
+                renderFreeMode(muscle);
+                updateChartForCurrentMuscle();
+                updateSidebarTips(muscle.name);
+                document.getElementById('selectView').classList.remove('active-view');
+                document.getElementById('trainingView').classList.add('active-view');
+            }
+
+            function updateChartForCurrentMuscle() {
+                if (!currentMuscle) return;
+                let total = 0,
+                    done = 0;
+                for (let p of currentMuscle.phases)
+                    for (let ex of p.exercises) { total++; if (ex.completed) done++; }
+                const ratio = total === 0 ? 0 : done / total;
+                showChartForMuscle(currentMuscle.name, ratio);
+            }
+
+            function renderMuscleSelector() {
+                const grid = document.getElementById('muscleGrid');
+                grid.innerHTML = '';
+                const imageMap = {
+                    "背部": "images/back.png",
+                    "胸部": "images/chest.png",
+                    "肩部": "images/shoulder.png",
+                    "腹部": "images/abs.png",
+                    "腿部": "images/legs.png",
+                    "手臂": "images/arms.png"
+                };
+                allMuscles.forEach(m => {
+                    const card = document.createElement('div');
+                    card.className = 'muscle-card';
+                    const imgSrc = imageMap[m.name];
+                    const imgHtml = imgSrc ?
+                        `<div class="muscle-icon"><img src="${imgSrc}" alt="${m.name}" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-dumbbell\' style=\'font-size:2.2rem; color:#FBBF24;\'></i>'"></div>` :
+                        `<div class="muscle-icon"><i class="fas fa-dumbbell" style="font-size:2.2rem; color:#FBBF24;"></i></div>`;
+                    // 计算完成比例
+                    let total = 0,
+                        done = 0;
+                    for (let p of m.phases)
+                        for (let ex of p.exercises) { total++; if (ex.completed) done++; }
+                    const ratio = total === 0 ? 0 : done / total;
+                    const badgeInfo = getCardBadgeInfo(ratio);
+                    const badgeHtml = badgeInfo ?
+                        `<span class="card-badge ${badgeInfo.cssClass}">${badgeInfo.text}</span>` : '';
+                    card.innerHTML = `${badgeHtml}${imgHtml}<h3>${m.name}</h3><p>点击开始训练</p>`;
+                    card.addEventListener('click', () => openTrainingPlan(m));
+                    grid.appendChild(card);
+                });
+            }
+
+            function initGlobalCircle() {
+                const ctx = document.getElementById('globalProgressCircle').getContext('2d');
+                window.globalCircleChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { datasets: [{ data: [0, 100], backgroundColor: ['#F59E0B', '#2D3748'], borderWidth: 0 }] },
+                    options: {
+                        cutout: '70%',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: { tooltip: { enabled: false }, legend: { display: false } }
+                    }
+                });
+            }
+
+            // ========== 登录注册逻辑 ==========
+            function switchToLoginForm() {
+                const authCard = document.getElementById('authCard');
+                const loginForm = document.getElementById('loginForm');
+                const registerForm = document.getElementById('registerForm');
+                registerForm.classList.add('fade-out');
+                setTimeout(() => {
+                    registerForm.style.display = 'none';
+                    registerForm.classList.remove('fade-out');
+                    loginForm.style.display = 'block';
+                    loginForm.style.opacity = '0';
+                    loginForm.style.transform = 'translateY(-8px)';
+                    requestAnimationFrame(() => {
+                        loginForm.style.opacity = '1';
+                        loginForm.style.transform = 'translateY(0)';
+                    });
+                }, 300);
+                authCard.classList.remove('register-mode');
+                document.getElementById('regError').innerText = '';
+            }
+
+            function switchToRegisterForm() {
+                const authCard = document.getElementById('authCard');
+                const loginForm = document.getElementById('loginForm');
+                const registerForm = document.getElementById('registerForm');
+                loginForm.classList.add('fade-out');
+                setTimeout(() => {
+                    loginForm.style.display = 'none';
+                    loginForm.classList.remove('fade-out');
+                    registerForm.style.display = 'block';
+                    registerForm.style.opacity = '0';
+                    registerForm.style.transform = 'translateY(-8px)';
+                    requestAnimationFrame(() => {
+                        registerForm.style.opacity = '1';
+                        registerForm.style.transform = 'translateY(0)';
+                    });
+                }, 300);
+                authCard.classList.add('register-mode');
+                document.getElementById('loginError').innerText = '';
+            }
+
+            function initAuth() {
+                document.getElementById('doLoginBtn').onclick = () => {
+                    const username = document.getElementById('loginUsername').value.trim();
+                    const password = document.getElementById('loginPassword').value.trim();
+                    const users = getUsers();
+                    if (users[username] && users[username].password === password) {
+                        currentUser = username;
+                        document.getElementById('currentUserDisplay').innerText = currentUser;
+                        loadUserProgress();
+                        loadRecent();
+                        renderWeekPlan();
+                        renderMuscleSelector();
+                        updateGlobalProgress();
+                        updateGlobalXpDisplay();
+                        updateMuscleCardBadges();
+                        document.getElementById('authView').classList.remove('active-view');
+                        document.getElementById('mainView').classList.add('active-view');
+                    } else {
+                        document.getElementById('loginError').innerText = '用户名或密码错误';
+                    }
+                };
+                document.getElementById('showRegisterBtn').onclick = switchToRegisterForm;
+                document.getElementById('showLoginBtn').onclick = switchToLoginForm;
+                document.getElementById('doRegisterBtn').onclick = () => {
+                    const username = document.getElementById('regUsername').value.trim();
+                    const password = document.getElementById('regPassword').value.trim();
+                    const users = getUsers();
+                    if (users[username]) {
+                        document.getElementById('regError').innerText = '用户名已存在';
+                        return;
+                    }
+                    users[username] = { password };
+                    saveUsers(users);
+                    alert('注册成功，请登录');
+                    switchToLoginForm();
+                    document.getElementById('loginUsername').value = username;
+                    document.getElementById('loginPassword').value = '';
+                };
+                document.getElementById('logoutBtn').onclick = () => {
+                    currentUser = null;
+                    globalXp = 0;
+                    unlockedAchievements = [];
+                    document.getElementById('mainView').classList.remove('active-view');
+                    document.getElementById('authView').classList.add('active-view');
+                    document.getElementById('loginUsername').value = '';
+                    document.getElementById('loginPassword').value = '';
+                    document.getElementById('loginError').innerText = '';
+                    document.getElementById('regError').innerText = '';
+                    const authCard = document.getElementById('authCard');
+                    authCard.classList.remove('register-mode');
+                    document.getElementById('loginForm').style.display = 'block';
+                    document.getElementById('registerForm').style.display = 'none';
+                    document.getElementById('loginForm').style.opacity = '1';
+                    document.getElementById('loginForm').style.transform = 'translateY(0)';
+                };
+            }
+
+            function bindButtons() {
+                document.getElementById('freeModeBtn').onclick = () => {
+                    if (!currentMuscle) return;
+                    currentMode = "free";
+                    document.getElementById('freeModeBtn').style.background = '#3B82F6';
+                    document.getElementById('followModeBtn').style.background = '#1F2A37';
+                    document.getElementById('freeModePanel').style.display = 'block';
+                    document.getElementById('followModePanel').style.display = 'none';
+                    renderFreeMode(currentMuscle);
+                };
+                document.getElementById('followModeBtn').onclick = () => {
+                    if (!currentMuscle) return;
+                    currentMode = "follow";
+                    document.getElementById('followModeBtn').style.background = '#F59E0B';
+                    document.getElementById('freeModeBtn').style.background = '#1F2A37';
+                    document.getElementById('freeModePanel').style.display = 'none';
+                    document.getElementById('followModePanel').style.display = 'block';
+                    enterFollowMode();
+                };
+                // ==================== 修复：返回选部位时保留宝石面板 ====================
+                document.getElementById('backToSelectBtn').onclick = () => {
+                    document.getElementById('selectView').classList.add('active-view');
+                    document.getElementById('trainingView').classList.remove('active-view');
+                    // 不再将 currentMuscle 置为 null，保留当前部位以便展示宝石面板
+                    if (currentMuscle) {
+                        let total = 0, done = 0;
+                        for (let p of currentMuscle.phases)
+                            for (let ex of p.exercises) { total++; if (ex.completed) done++; }
+                        const ratio = total === 0 ? 0 : done / total;
+                        showChartForMuscle(currentMuscle.name, ratio);
+                        document.getElementById('vizMuscleLabel').innerHTML = `${currentMuscle.name} 肌群可视化进度`;
+                        updateSidebarTips(currentMuscle.name);
+                    } else {
+                        const container = document.getElementById('chartContainer');
+                        if (container) container.innerHTML = '<div class="placeholder-chart">👈 点击部位查看宝石收集</div>';
+                        document.getElementById('vizMuscleLabel').innerHTML = '肌群可视化进度';
+                        document.getElementById('dynamicTips').innerHTML = '<li>🔥 注重热身激活身体</li><li>🏋️ 训练前动态拉伸</li>';
+                    }
+                };
+                document.getElementById('resetCurrentPartBtn').onclick = resetCurrentPart;
+                document.getElementById('resetAllBtn').onclick = resetAll;
+                document.getElementById('exportReportBtn').onclick = exportReport;
+                document.getElementById('editPlanBtn').onclick = showPlanModal;
+                document.getElementById('savePlanBtn').onclick = () => { savePlan();
+                    closePlanModal(); };
+                document.getElementById('shopSidebarCard').onclick = openShopModal;
+                window.onclick = (e) => {
+                    if (e.target === document.getElementById('techModal')) closeModal();
+                    if (e.target === document.getElementById('demoModal')) closeDemoModal();
+                    if (e.target === document.getElementById('planModal')) closePlanModal();
+                    if (e.target === document.getElementById('shopModal')) closeShopModal();
+                };
+            }
+
+            initAuth();
+            bindButtons();
+            initGlobalCircle();
+            bindWeekPlanClick();
+        })();
+    </script>
+</body>
+</html>
