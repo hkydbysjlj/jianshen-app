@@ -2588,16 +2588,25 @@
                     document.getElementById('followModePanel').style.display = 'block';
                     enterFollowMode();
                 };
+                // ==================== 修复：返回选部位时保留宝石面板 ====================
                 document.getElementById('backToSelectBtn').onclick = () => {
                     document.getElementById('selectView').classList.add('active-view');
                     document.getElementById('trainingView').classList.remove('active-view');
-                    currentMuscle = null;
-                    const container = document.getElementById('chartContainer');
-                    if (container) container.innerHTML =
-                        '<div class="placeholder-chart">👈 点击部位查看宝石收集</div>';
-                    document.getElementById('dynamicTips').innerHTML =
-                        '<li>🔥 注重热身激活身体</li><li>🏋️ 训练前动态拉伸</li>';
-                    document.getElementById('vizMuscleLabel').innerHTML = '肌群可视化进度';
+                    // 不再将 currentMuscle 置为 null，保留当前部位以便展示宝石面板
+                    if (currentMuscle) {
+                        let total = 0, done = 0;
+                        for (let p of currentMuscle.phases)
+                            for (let ex of p.exercises) { total++; if (ex.completed) done++; }
+                        const ratio = total === 0 ? 0 : done / total;
+                        showChartForMuscle(currentMuscle.name, ratio);
+                        document.getElementById('vizMuscleLabel').innerHTML = `${currentMuscle.name} 肌群可视化进度`;
+                        updateSidebarTips(currentMuscle.name);
+                    } else {
+                        const container = document.getElementById('chartContainer');
+                        if (container) container.innerHTML = '<div class="placeholder-chart">👈 点击部位查看宝石收集</div>';
+                        document.getElementById('vizMuscleLabel').innerHTML = '肌群可视化进度';
+                        document.getElementById('dynamicTips').innerHTML = '<li>🔥 注重热身激活身体</li><li>🏋️ 训练前动态拉伸</li>';
+                    }
                 };
                 document.getElementById('resetCurrentPartBtn').onclick = resetCurrentPart;
                 document.getElementById('resetAllBtn').onclick = resetAll;
